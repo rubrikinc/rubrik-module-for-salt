@@ -11,6 +11,7 @@ import logging
 import sys
 import json
 import requests
+import salt
 
 sys.path.append('/var/cache/salt/minion/files/extmods/modules/')
 
@@ -51,3 +52,32 @@ def cluster_info():
         return json.dumps(my_cluster_info, sort_keys=True, indent=2, separators=(',', ': '))
     except:
         log.error("Something went wrong getting the Rubrik cluster information.")
+
+def get_sla(hostname=None):
+    '''
+    Returns the SLA for the current machine
+    '''
+    aliases = []
+    if not hostname:
+        hostname = __grains__['host']
+    '''
+    else:
+
+        aliases.append(__grains__['host'])
+        for ip_address in __grains__['ipv4']:
+            if not ip_address == '127.0.0.1':
+                aliases.append(ip_address)
+    '''
+    rk = _rubrik_obj()
+    '''Check to see if VM exists'''
+    my_vm = False
+    vm_query = rk.query_vm(primary_cluster_id='local', limit=20000, is_relic=False, name=hostname)
+    for vm in vm_query.data:
+        if vm.name == hostname:
+            my_vm = vm
+
+    if not my_vm:
+        log.error("VMware VM not found.")
+        return("VMware VM not found")
+
+    return ("Current SLA domain is: "+my_vm.effective_sla_domain_name)

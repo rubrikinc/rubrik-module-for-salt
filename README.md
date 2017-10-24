@@ -47,3 +47,18 @@ th-salt-minion01.rangers.lab:
       "version": "4.0.3-474"
     }
 ```
+
+### get_sla_domain
+
+Returns the SLA domain for the given host. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
+
+#### Example Usage
+
+```none
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_sla hostname='foobar'
+th-salt-minion01.rangers.lab:
+    VMware VM not found
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_sla
+th-salt-minion01.rangers.lab:
+    Current SLA domain is: Gold
+```
