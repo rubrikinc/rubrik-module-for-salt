@@ -60,14 +60,6 @@ def get_sla(hostname=None):
     aliases = []
     if not hostname:
         hostname = __grains__['host']
-    '''
-    else:
-
-        aliases.append(__grains__['host'])
-        for ip_address in __grains__['ipv4']:
-            if not ip_address == '127.0.0.1':
-                aliases.append(ip_address)
-    '''
     rk = _rubrik_obj()
     '''Check to see if VM exists'''
     my_vm = False
