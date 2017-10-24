@@ -158,3 +158,19 @@ def od_backup(hostname=None,sla_domain=None,object_type='vmware_vm'):
     log.info('Snapshot taken')
     return ('Snapshot taken')
 
+def register_host(hostname=None):
+    '''
+    Registers the host against the Rubrik cluster - requires that the Rubrik Backup Connector be installed,
+    and that DNS resolution to the hostname be working correctly (otherwise IP address can be passed using the
+    'hostname' parameter)
+    '''
+    if not hostname:
+        hostname = __grains__['host']
+    rk = _rubrik_obj()
+    try:
+        rk.register_host(host={"hostname": hostname, "hasAgent":True})
+        log.info('Host registered as '+hostname)
+        return ('Host registered as '+hostname)
+    except:
+        log.error('Something went wrong registering the host')
+        return ('Something went wrong registering the host')

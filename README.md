@@ -98,3 +98,21 @@ root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup sla_domain='Si
 th-salt-minion01.rangers.lab:
     Snapshot taken
 ```
+
+### register_host
+
+Registers the target host with the Rubrik cluster. This requires that the Rubrik Backup Connector be installed, running, and accessible on the target system, and that DNS resolution from the Rubrik cluster be working correctly. The `hostname` parameter can be passed as shown in the examples below to pass the IP of the host, if DNS resolution will not be possible.
+
+#### Example Usage
+
+```none
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.register_host
+th-salt-minion01.rangers.lab:
+    Something went wrong registering the host
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.register_host hostname='th-mongo-01'
+th-salt-minion01.rangers.lab:
+    Something went wrong registering the host
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.register_host hostname='172.21.11.119'
+th-salt-minion01.rangers.lab:
+    Host registered as 172.21.11.119
+```
