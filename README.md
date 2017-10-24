@@ -15,11 +15,35 @@ Features the following resources:
 
 ## Pre-requisites
 
-* Requires the pyRubrik Python module to be installed
+* Requires the pyRubrik Python module to be installed on each minion (will later add this as a state):
+1. Clone repo to destination host
+1. cd to `module-utils/RubrikLib`, run `sudo -H python setup.py install`
+1. cd to `module-utils/RubrikLib_Int`, run `sudo -H python setup.py install`
 * Requires the following Pillar data to be defined for any nodes using the Rubrik module:
 
 ```
 rubrik.node: rubrik.demo.com
 rubrik.username: admin
 rubrik.password: Mypass123!
+```
+
+## Functions
+
+### cluster_info
+
+Returns information about the cluster, this is used as a test to make sure connectivity to the cluster is good.
+
+#### Example Usage
+
+```none
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.cluster_info -v
+Executing job with jid 20171024100133454853
+-------------------------------------------
+
+th-salt-minion01.rangers.lab:
+    {
+      "apiVersion": "1",
+      "id": "89fc0d86-6f1c-4652-aefa-37b7ba0e6229",
+      "version": "4.0.3-474"
+    }
 ```
