@@ -55,12 +55,12 @@ def cluster_info():
 
 def get_sla(hostname=None):
     '''
-    Returns the SLA for the current machine
+    Returns the SLA for the given machine
     '''
-    aliases = []
     if not hostname:
         hostname = __grains__['host']
     rk = _rubrik_obj()
+
     '''Check to see if VM exists'''
     my_vm = False
     vm_query = rk.query_vm(primary_cluster_id='local', limit=20000, is_relic=False, name=hostname)
@@ -73,3 +73,41 @@ def get_sla(hostname=None):
         return("VMware VM not found")
 
     return ("Current SLA domain is: "+my_vm.effective_sla_domain_name)
+
+def set_sla(hostname=None,sla_domain=None):
+    '''
+    Updates the SLA for the given machine
+    '''
+    if not hostname:
+        hostname = __grains__['host']
+    rk = _rubrik_obj()
+
+    '''Check to see if VM exists'''
+    my_vm = False
+    vm_query = rk.query_vm(primary_cluster_id='local', limit=20000, is_relic=False, name=hostname)
+    for vm in vm_query.data:
+        if vm.name == hostname:
+            my_vm = vm
+
+    if not my_vm:
+        log.error("VMware VM not found.")
+        return("VMware VM not found")
+
+    '''Compare current SLA domain to desired one, and update if necessary'''
+    if my_vm.effective_sla_domain_name == sla_domain:
+        log.info('SLA Domain already set to '+sla_domain)
+        return ('SLA Domain already set to '+sla_domain)
+    else:
+        my_sla = False
+        sla_query = rk.query_sla_domain(primary_cluster_id='local', limit=20000, is_relic=False, name=sla_domain)
+        for sla in sla_query.data:
+            if sla.name == sla_domain:
+                my_sla = sla
+
+        if not my_sla:
+            log.error("SLA domain not found.")
+            return("SLA domain not found")
+
+        rk.update_vm(id=my_vm.id, vm_update_properties={"configured_sla_domain_id": my_sla.id})
+        log.info('SLA Domain updated to '+sla_domain)
+        return ('SLA Domain updated to '+sla_domain)

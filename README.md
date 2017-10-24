@@ -48,7 +48,7 @@ th-salt-minion01.rangers.lab:
     }
 ```
 
-### get_sla_domain
+### get_sla
 
 Returns the SLA domain for the given host. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
 
@@ -61,4 +61,25 @@ th-salt-minion01.rangers.lab:
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_sla
 th-salt-minion01.rangers.lab:
     Current SLA domain is: Gold
+```
+
+### set_sla
+
+Sets the SLA domain to the value named in `sla_domain`. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
+
+#### Example Usage
+
+```none
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_sla sla_domain='Silver' -v
+Executing job with jid 20171024121337392104
+-------------------------------------------
+
+th-salt-minion01.rangers.lab:
+    SLA Domain already set to Silver
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_sla sla_domain='Bronze' -v
+Executing job with jid 20171024121343410581
+-------------------------------------------
+
+th-salt-minion01.rangers.lab:
+    SLA Domain updated to Bronze
 ```
