@@ -83,3 +83,18 @@ Executing job with jid 20171024121343410581
 th-salt-minion01.rangers.lab:
     SLA Domain updated to Bronze
 ```
+
+### od_backup
+
+Takes an on-demand snapshot of the target machine. Parameter `hostname` can be used to pass a different hostname, as well as `sla_domain` to specify the SLA domain to attach to the snapshot. `object_type` attribute can be used to specify the type of object being snapshotted, although only `vmware_vm` can be used today (for VMware Virtual Machines).
+
+#### Example Usage
+
+```none
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup
+th-salt-minion01.rangers.lab:
+    Snapshot taken
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup sla_domain='Silver'
+th-salt-minion01.rangers.lab:
+    Snapshot taken
+```

@@ -111,3 +111,50 @@ def set_sla(hostname=None,sla_domain=None):
         rk.update_vm(id=my_vm.id, vm_update_properties={"configured_sla_domain_id": my_sla.id})
         log.info('SLA Domain updated to '+sla_domain)
         return ('SLA Domain updated to '+sla_domain)
+
+def od_backup(hostname=None,sla_domain=None,object_type='vmware_vm'):
+    '''
+    Takes an on-demand snapshot for the given machine and policy
+    '''
+    if not hostname:
+        hostname = __grains__['host']
+    rk = _rubrik_obj()
+    ''' Check to see if object type exists'''
+    object_exists = False
+    object_types = ['vmware_vm']
+    object_exists = object_type in object_types
+    if not object_exists:
+        log.info("Object type " + object_type + " does not exist.  Please check the input attributes.")
+        return("Object type " + object_type + " does not exist.  Please check the input attributes.")
+
+    '''Check to see if VM exists'''
+    my_vm = False
+    vm_query = rk.query_vm(primary_cluster_id='local', limit=20000, is_relic=False, name=hostname)
+    for vm in vm_query.data:
+        if vm.name == hostname:
+            my_vm = vm
+
+    if not my_vm:
+        log.error("VMware VM not found.")
+        return("VMware VM not found")
+
+    '''Figure out the SLA Domain ID'''
+    my_sla = False
+    if sla_domain:
+        my_sla_name = sla_domain
+    else:
+        my_sla_name = my_vm.effective_sla_domain_name
+    sla_query = rk.query_sla_domain(primary_cluster_id='local', limit=20000, is_relic=False, name=my_sla_name)
+    for sla in sla_query.data:
+        if sla.name == my_sla_name:
+            my_sla = sla
+
+    if not my_sla:
+            log.error("SLA domain not found.")
+            return("SLA domain not found")
+
+    '''Take the snapshot'''
+    rk.create_on_demand_backup(id=my_vm.id,config={"sla_id": my_sla.id})
+    log.info('Snapshot taken')
+    return ('Snapshot taken')
+
