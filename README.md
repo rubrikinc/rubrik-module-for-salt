@@ -15,10 +15,6 @@ Features the following resources:
 
 ## Pre-requisites
 
-* Requires the pyRubrik Python module to be installed on each minion (will later add this as a state):
-1. Clone repo to destination host
-1. cd to `module-utils/RubrikLib`, run `sudo -H python setup.py install`
-1. cd to `module-utils/RubrikLib_Int`, run `sudo -H python setup.py install`
 * Requires the following Pillar data to be defined for any nodes using the Rubrik module:
 
 ```
@@ -26,6 +22,8 @@ rubrik.node: rubrik.demo.com
 rubrik.username: admin
 rubrik.password: Mypass123!
 ```
+
+* Module should be copied to the `_modules` folder on the Salt master, and distributed to the hosts using the `salt '*' saltutil.sync_all` command
 
 ## Functions
 
