@@ -46,35 +46,35 @@ th-salt-minion01.rangers.lab:
     }
 ```
 
-### get_sla
+### get_vmware_vm_sla
 
 Returns the SLA domain for the given host. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
 
 #### Example Usage
 
 ```none
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_sla hostname='foobar'
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_vmware_vm_sla hostname='foobar'
 th-salt-minion01.rangers.lab:
     VMware VM not found
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_sla
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_vmware_vm_sla
 th-salt-minion01.rangers.lab:
     Current SLA domain is: Gold
 ```
 
-### set_sla
+### set_vmware_vm_sla
 
 Sets the SLA domain to the value named in `sla_domain`. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
 
 #### Example Usage
 
 ```none
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_sla sla_domain='Silver' -v
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_vmware_vm_sla sla_domain='Silver' -v
 Executing job with jid 20171024121337392104
 -------------------------------------------
 
 th-salt-minion01.rangers.lab:
     SLA Domain already set to Silver
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_sla sla_domain='Bronze' -v
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_vmware_vm_sla sla_domain='Bronze' -v
 Executing job with jid 20171024121343410581
 -------------------------------------------
 
@@ -82,17 +82,17 @@ th-salt-minion01.rangers.lab:
     SLA Domain updated to Bronze
 ```
 
-### od_backup
+### od_backup_vmware_vm
 
-Takes an on-demand snapshot of the target machine. Parameter `hostname` can be used to pass a different hostname, as well as `sla_domain` to specify the SLA domain to attach to the snapshot. `object_type` attribute can be used to specify the type of object being snapshotted, although only `vmware_vm` can be used today (for VMware Virtual Machines).
+Takes an on-demand snapshot of the target machine. Parameter `hostname` can be used to pass a different hostname, as well as `sla_domain` to specify the SLA domain to attach to the snapshot.
 
 #### Example Usage
 
 ```none
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup_vmware_vm
 th-salt-minion01.rangers.lab:
     Snapshot taken
-root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup sla_domain='Silver'
+root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup_vmware_vm sla_domain='Silver'
 th-salt-minion01.rangers.lab:
     Snapshot taken
 ```
