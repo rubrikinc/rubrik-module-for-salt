@@ -15,7 +15,7 @@ Features the following resources:
 
 Here are some resources to get you started! If you find any challenges from this project are not properly documented or are unclear, please [raise an issue](https://github.com/rubrikinc/rubrik-module-for-salt/issues/new/choose) and let us know! This is a fun, safe environment - don't worry if you're a GitHub newbie! :heart:
 
-* [Quick Start Guide](/docs/QUICKSTART.md)
+* [Quick Start Guide](/docs/quick-start.md)
 
 # :white_check_mark: Prerequisites
 
