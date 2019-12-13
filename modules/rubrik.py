@@ -180,7 +180,7 @@ def register_host(hostname=None):
         token = _get_token()
         uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/host'
         headers = {'Content-Type':'application/json','Accept':'application/json','Authorization':token}
-        payload = '{"hostname":"'+hostname+'","hasAgent":True}'
+        payload = '{"hostname":"'+hostname+'","hasAgent":true}'
         register_host = requests.post(uri, headers=headers, verify=False, data=payload)
         if register_host.status_code != 201:
             raise ValueError("Something went wrong registering the host")
