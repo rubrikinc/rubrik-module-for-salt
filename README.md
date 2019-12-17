@@ -9,6 +9,7 @@ Features the following resources:
 * Set SLA Domain
 * On-Demand Snapshot
 * Register host with Rubrik cluster
+* Create fileset and assign SLA
 
 # :blue_book: Documentation
 

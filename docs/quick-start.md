@@ -113,3 +113,18 @@ root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.register_host hostname='
 th-salt-minion01.rangers.lab:
     Host registered as 172.21.11.119
 ```
+
+### add_fileset_to_host
+
+Adds a new fileset to a Linux/Windows host, and applies an SLA to it. If the fileset already exists, then the SLA will be updated to match that defined by the user.
+
+#### Example Usage - add_fileset_to_host
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.add_fileset_to_host hostname='172.21.11.120' fileset_name='th-allthethings' sla_domain='Gold'
+salt-minion-01.rangers.lab:
+    Fileset created, ID is Fileset:::24f2227e-2a73-40d1-b22f-01bb200127f2. SLA Gold applied.
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.add_fileset_to_host hostname='172.21.11.120' fileset_name='th-allthethings' sla_domain='Gold' os_type='Windows'
+salt-minion-01.rangers.lab:
+    Something went wrong creating the fileset, error: Host not found
+```
