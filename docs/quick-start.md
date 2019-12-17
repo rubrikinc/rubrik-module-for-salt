@@ -11,13 +11,12 @@ Features the following resources:
 * Set SLA Domain
 * On-Demand Snapshot
 * Register host with Rubrik cluster
-* Install Rubrik Connector Service
 
 ## Pre-requisites
 
 * Requires the following Pillar data to be defined for any nodes using the Rubrik module:
 
-```
+```none
 rubrik.node: rubrik.demo.com
 rubrik.username: admin
 rubrik.password: Mypass123!
@@ -31,7 +30,7 @@ rubrik.password: Mypass123!
 
 Returns information about the cluster, this is used as a test to make sure connectivity to the cluster is good.
 
-#### Example Usage
+#### Example Usage - cluster_info
 
 ```none
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.cluster_info -v
@@ -50,7 +49,7 @@ th-salt-minion01.rangers.lab:
 
 Returns the SLA domain for the given host. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
 
-#### Example Usage
+#### Example Usage - get_vmware_vm_sla
 
 ```none
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.get_vmware_vm_sla hostname='foobar'
@@ -65,7 +64,7 @@ th-salt-minion01.rangers.lab:
 
 Sets the SLA domain to the value named in `sla_domain`. Parameter `hostname` can be used to pass a different hostname if required, otherwise this will use the minion's grains to pull the hostname.
 
-#### Example Usage
+#### Example Usage - set_vmware_vm_sla
 
 ```none
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.set_vmware_vm_sla sla_domain='Silver' -v
@@ -86,7 +85,7 @@ th-salt-minion01.rangers.lab:
 
 Takes an on-demand snapshot of the target machine. Parameter `hostname` can be used to pass a different hostname, as well as `sla_domain` to specify the SLA domain to attach to the snapshot.
 
-#### Example Usage
+#### Example Usage - od_backup_vmware_vm
 
 ```none
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.od_backup_vmware_vm
@@ -101,7 +100,7 @@ th-salt-minion01.rangers.lab:
 
 Registers the target host with the Rubrik cluster. This requires that the Rubrik Backup Connector be installed, running, and accessible on the target system, and that DNS resolution from the Rubrik cluster be working correctly. The `hostname` parameter can be passed as shown in the examples below to pass the IP of the host, if DNS resolution will not be possible.
 
-#### Example Usage
+#### Example Usage - register_host
 
 ```none
 root@th-salt-master:/srv/salt/_modules# salt '*' rubrik.register_host
