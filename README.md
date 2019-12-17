@@ -9,9 +9,9 @@ Features the following resources:
 * Set SLA Domain
 * On-Demand Snapshot
 * Register host with Rubrik cluster
-* Install Rubrik Connector Service
+* Create fileset and assign SLA
 
-# :blue_book: Documentation 
+# :blue_book: Documentation
 
 Here are some resources to get you started! If you find any challenges from this project are not properly documented or are unclear, please [raise an issue](https://github.com/rubrikinc/rubrik-module-for-salt/issues/new/choose) and let us know! This is a fun, safe environment - don't worry if you're a GitHub newbie! :heart:
 
