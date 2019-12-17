@@ -245,7 +245,7 @@ def add_fileset_to_host(hostname=None,fileset_name=None,sla_domain=None,os_type=
         fileset_id = False
         uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset?primary_cluster_id=local&is_relic=false&host_id='+my_host['id']+'&template_id='+my_fst['id']
         fileset_query = requests.get(uri, headers=headers, verify=False, timeout=15)
-        if fileset_query.json()['total'] >= 0:
+        if fileset_query.json()['total'] > 0:
             fileset_id = fileset_query.json()['data'][0]['id']
         '''Create fileset'''
         if not fileset_id:
