@@ -10,6 +10,7 @@ Features the following resources:
 * On-Demand Snapshot
 * Register host with Rubrik cluster
 * Create fileset and assign SLA
+* Check host registration status
 
 # :blue_book: Documentation
 

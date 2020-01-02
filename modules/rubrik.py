@@ -198,6 +198,36 @@ def register_host(hostname=None):
         LOG.error('Something went wrong registering the host, error: '+str(e))
         return ('Something went wrong registering the host, error: '+str(e))
 
+def get_host_registration(hostname=None,os_type='Linux'):
+    '''
+    Checks the host registration status, returning a boolean value (true=registered, false=not_registered)
+    '''
+    try:
+        host_registered = False
+        if not hostname:
+            hostname = __grains__['host']
+        token = _get_token()
+        if os_type == 'Linux':
+            os_type = 'UnixLike'
+        elif os_type == 'Windows':
+            os_type = 'Windows'
+        uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/host?primary_cluster_id=local&operating_system_type='+os_type+'&name='+hostname
+        headers = {'Accept':'application/json', 'Authorization':token}
+        host_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+        if host_query.json()['total'] == 0:
+            host_registered = False
+        else:
+            for host in host_query.json()['data']:
+                if host['name'] == hostname:
+                    host_registered = True
+        message = ('Host registration status for: '+hostname+', OS type: '+os_type+' is: '+str(host_registered))
+        LOG.info(message)
+        return host_registered
+    except Exception,e:
+        exc_tuple = sys.exc_info()
+        LOG.error('Something went wrong getting host registration status, error: '+str(e))
+        return ('Something went wrong getting host registration status, error: '+str(e))
+
 def add_fileset_to_host(hostname=None,fileset_name=None,sla_domain=None,os_type='Linux'):
     '''
     Adds a fileset to a Windows/Linux/Unix host

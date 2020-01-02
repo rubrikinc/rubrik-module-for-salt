@@ -128,3 +128,27 @@ root@salt-master:/srv/salt/_modules# salt '*' rubrik.add_fileset_to_host hostnam
 salt-minion-01.rangers.lab:
     Something went wrong creating the fileset, error: Host not found
 ```
+
+### get_host_registration
+
+Returns a boolean value based on whether a host is registered with the Rubrik cluster.
+
+#### Example Usage - get_host_registration
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-ansible
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-linux
+salt-minion-01.rangers.lab:
+    True
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-linux os_type=Windows
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-win os_type=Windows
+salt-minion-01.rangers.lab:
+    True
+```
