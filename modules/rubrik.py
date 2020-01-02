@@ -11,6 +11,7 @@ import json
 import base64
 import requests
 import salt
+import datetime
 
 sys.path.append('/var/cache/salt/minion/files/extmods/modules/')
 
@@ -302,3 +303,236 @@ def add_fileset_to_host(hostname=None,fileset_name=None,sla_domain=None,os_type=
         exc_tuple = sys.exc_info()
         LOG.error('Something went wrong creating the fileset, error: '+str(e))
         return ('Something went wrong creating the fileset, error: '+str(e))
+
+def check_fileset_configuration(hostname=None,fileset_name=None,sla_domain=None,os_type='Linux'):
+    '''
+    Checks if a fileset for a Windows/Linux/Unix host exists and is correctly protected
+    '''
+    try:
+        fileset_configured = False
+        if not hostname:
+            hostname = __grains__['host']
+        token = _get_token()
+        if os_type == 'Linux':
+            os_type = 'UnixLike'
+        elif os_type == 'Windows':
+            os_type = 'Windows'
+        '''
+        Get host ID
+        '''
+        my_host_id = _get_host_id(hostname,os_type)
+        if not my_host_id:
+            raise ValueError("No host ID found for "+hostname)
+        '''
+        Get SLA ID
+        '''
+        my_sla_id = _get_sla_id(sla_domain)
+        if not my_sla_id:
+            raise ValueError("No SLA Domain found with name: "+sla_domain)
+        '''
+        Get fileset template ID
+        '''
+        my_fst_id = _get_fst_id(fileset_name,os_type)
+        if not my_fst_id:
+            raise ValueError("No Fileset Template found with name: "+fileset_name)
+        '''
+        Get fileset ID
+        '''
+        my_fileset_id = _get_fileset_id(my_host_id,my_fst_id)
+        if not my_fileset_id:
+            message = 'Fileset does not exist.'
+            LOG.info(message)
+            return fileset_configured
+        '''
+        Check fileset SLA
+        '''
+        my_fileset_sla = _get_fileset_sla(my_fileset_id)
+        if not my_fileset_sla:
+            raise ValueError("Something went wrong getting the SLA for: "+fileset_name)
+        if my_fileset_sla == my_sla_id:
+            fileset_configured = True
+        return fileset_configured
+    except Exception,e:
+        exc_tuple = sys.exc_info()
+        LOG.error('Something went wrong getting fileset details, error: '+str(e))
+        return ('Something went wrong getting fileset details, error: '+str(e))
+
+def get_latest_snapshot(hostname=None,object_type='vmware_vm',**kwargs):
+    '''
+    Returns the latest snapshot date/time for a given object
+    '''
+    try:
+        if not hostname:
+            hostname = __grains__['host']
+        token = _get_token()
+        if object_type == 'vmware_vm':
+            vm_id = _get_vmware_vm_id(hostname)
+            if not vm_id:
+                raise ValueError("No VM found with name "+hostname)
+            last_snapshot = _get_latest_snapshot(vm_id)
+            return last_snapshot
+        '''
+        Latest snapshot for fileset
+        '''
+        if object_type == 'fileset':
+            fileset_name = kwargs.get('fileset_name',None)
+            os_type = kwargs.get('os_type','Linux')
+            os_type = _normalise_os_type(os_type)
+            '''
+            Get host ID
+            '''
+            my_host_id = _get_host_id(hostname,os_type)
+            if not my_host_id:
+                raise ValueError("No host ID found for "+hostname)
+            '''
+            Get fileset template ID
+            '''
+            my_fst_id = _get_fst_id(fileset_name,os_type)
+            if not my_fst_id:
+                raise ValueError("No Fileset Template found with name: "+fileset_name)
+            '''
+            Get fileset ID
+            '''
+            my_fileset_id = _get_fileset_id(my_host_id,my_fst_id)
+            if not my_fileset_id:
+                message = 'Fileset does not exist.'
+                LOG.info(message)
+            last_snapshot = _get_latest_snapshot(my_fileset_id)
+            return last_snapshot
+    except Exception,e:
+        exc_tuple = sys.exc_info()
+        LOG.error('Something went wrong getting latest snapshot, error: '+str(e))
+        return ('Something went wrong getting latest snapshot, error: '+str(e))
+
+'''
+Helper functions
+'''
+def _get_sla_id(sla_domain=None):
+    '''
+    Returns the ID of an SLA Domain given the name
+    '''
+    my_sla = False
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/sla_domain?primary_cluster_id=local&name='+sla_domain
+    headers = {'Accept':'application/json', 'Authorization':token}
+    sla_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    for sla in sla_query.json()['data']:
+        if sla['name'] == sla_domain:
+            my_sla = sla
+    if not my_sla:
+        return None
+    else:
+        return my_sla['id']
+
+def _get_host_id(hostname=None,os_type=None):
+    '''
+    Returns the ID of a host given the hostname and OS type
+    '''
+    my_host = False
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/host?primary_cluster_id=local&operating_system_type='+os_type+'&name='+hostname
+    headers = {'Accept':'application/json', 'Authorization':token}
+    host_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    for host in host_query.json()['data']:
+        if host['name'] == hostname:
+            my_host = host
+    if not my_host:
+        return None
+    else:
+        return my_host['id']
+
+def _get_fst_id(fileset_name=None,os_type=None):
+    '''
+    Returns the ID of a fileset template given the fileset template name and OS type
+    '''
+    my_fst = False
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset_template?primary_cluster_id=local&operating_system_type='+os_type+'&name='+fileset_name
+    headers = {'Accept':'application/json', 'Authorization':token}
+    fst_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    for fst in fst_query.json()['data']:
+        if fst['name'] == fileset_name:
+            my_fst = fst
+    if not my_fst:
+        return None
+    else:
+        return my_fst['id']
+
+def _get_fileset_id(host_id=None,fst_id=None):
+    '''
+    Returns the ID of a fileset given the host and fileset template ID
+    '''
+    fileset_id = False
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset?primary_cluster_id=local&is_relic=false&host_id='+host_id+'&template_id='+fst_id
+    headers = {'Accept':'application/json', 'Authorization':token}
+    fileset_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    if fileset_query.json()['total'] > 0:
+        return fileset_query.json()['data'][0]['id']
+    else:
+        return None
+
+def _get_fileset_sla(fileset_id=None):
+    '''
+    Returns the ID of a fileset given the host and fileset template ID
+    '''
+    fileset_sla = False
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset/'+fileset_id
+    headers = {'Accept':'application/json', 'Authorization':token}
+    fileset_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    if fileset_query.json()['configuredSlaDomainId']:
+        return fileset_query.json()['configuredSlaDomainId']
+    else:
+        return None
+
+def _get_vmware_vm_id(vm_name=None):
+    '''
+    Returns the ID of a VMware VM given the VM name
+    '''
+    vm_id = False
+    token = _get_token()
+    headers = {'Accept':'application/json', 'Authorization':token}
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/vmware/vm?primary_cluster_id=local&is_relic=false&name='+vm_name
+    vm_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    for vm in vm_query.json()['data']:
+        if vm['name'] == vm_name:
+            vm_id = vm['id']
+    return vm_id
+
+def _get_latest_snapshot(object_id):
+    '''
+    Returns the latest snapshot for a given object
+    '''
+    object_type = object_id.split(':::')[0]
+    token = _get_token()
+    headers = {'Accept':'application/json', 'Authorization':token}
+    if object_type == 'VirtualMachine': # VMware VM
+        uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/vmware/vm/'+object_id+'/snapshot'
+    elif object_type == 'Fileset': # fileset
+        uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset/'+object_id
+    else:
+        raise ValueError("Unsupported object type: "+object_type)
+    snapshot_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    if object_type == 'VirtualMachine': # VMware VM
+        if snapshot_query.json()['total'] > 0:
+            datestr = snapshot_query.json()['data'][0]['date']
+            return str(datetime.datetime.strptime(datestr,'%Y-%m-%dT%H:%M:%S.%fZ'))
+        else:
+            return None
+    elif object_type == 'Fileset': # fileset
+        if len(snapshot_query.json()['snapshots']) > 0:
+            datestr = snapshot_query.json()['snapshots'][-1]['date']
+            return str(datetime.datetime.strptime(datestr,'%Y-%m-%dT%H:%M:%S.%fZ'))
+        else:
+            return None
+    else:
+        return None
+
+def _normalise_os_type(os_type):
+        if os_type == 'Linux':
+            return 'UnixLike'
+        elif os_type == 'Windows':
+            return 'Windows'
+        else:
+            return None
