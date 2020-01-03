@@ -313,10 +313,7 @@ def check_fileset_configuration(hostname=None,fileset_name=None,sla_domain=None,
         if not hostname:
             hostname = __grains__['host']
         token = _get_token()
-        if os_type == 'Linux':
-            os_type = 'UnixLike'
-        elif os_type == 'Windows':
-            os_type = 'Windows'
+        os_type = _normalise_os_type(os_type)
         '''
         Get host ID
         '''
@@ -357,6 +354,29 @@ def check_fileset_configuration(hostname=None,fileset_name=None,sla_domain=None,
         LOG.error('Something went wrong getting fileset details, error: '+str(e))
         return ('Something went wrong getting fileset details, error: '+str(e))
 
+def get_fileset_list(hostname=None,os_type='Linux'):
+    try:
+        if not hostname:
+            hostname = __grains__['host']
+        token = _get_token()
+        os_type = _normalise_os_type(os_type)
+        '''
+        Get host ID
+        '''
+        my_host_id = _get_host_id(hostname,os_type)
+        if not my_host_id:
+            raise ValueError("No host ID found for "+hostname)
+        '''
+        Get fileset list
+        '''
+        fileset_list = _get_fileset_list(my_host_id)
+        return fileset_list
+    except Exception,e:
+        exc_tuple = sys.exc_info()
+        LOG.error('Something went wrong getting fileset list, error: '+str(e))
+        return ('Something went wrong getting fileset list, error: '+str(e))
+
+
 def get_latest_snapshot(hostname=None,object_type='vmware_vm',**kwargs):
     '''
     Returns the latest snapshot date/time for a given object
@@ -384,21 +404,33 @@ def get_latest_snapshot(hostname=None,object_type='vmware_vm',**kwargs):
             my_host_id = _get_host_id(hostname,os_type)
             if not my_host_id:
                 raise ValueError("No host ID found for "+hostname)
-            '''
-            Get fileset template ID
-            '''
-            my_fst_id = _get_fst_id(fileset_name,os_type)
-            if not my_fst_id:
-                raise ValueError("No Fileset Template found with name: "+fileset_name)
-            '''
-            Get fileset ID
-            '''
-            my_fileset_id = _get_fileset_id(my_host_id,my_fst_id)
-            if not my_fileset_id:
-                message = 'Fileset does not exist.'
-                LOG.info(message)
-            last_snapshot = _get_latest_snapshot(my_fileset_id)
-            return last_snapshot
+            if fileset_name:
+                '''
+                Get fileset template ID
+                '''
+                my_fst_id = _get_fst_id(fileset_name,os_type)
+                if not my_fst_id:
+                    raise ValueError("No Fileset Template found with name: "+fileset_name)
+                '''
+                Get fileset ID
+                '''
+                my_fileset_id = _get_fileset_id(my_host_id,my_fst_id)
+                if not my_fileset_id:
+                    message = 'Fileset does not exist.'
+                    LOG.info(message)
+                last_snapshot = _get_latest_snapshot(my_fileset_id)
+                return last_snapshot
+            else:
+                '''
+                Get fileset list
+                '''
+                output_list = []
+                fileset_list = _get_fileset_list(my_host_id)
+                for fileset in fileset_list:
+                    this_fileset = fileset
+                    this_fileset['last_snapshot'] = _get_latest_snapshot(fileset['id'])
+                    output_list.append(this_fileset)
+                return output_list
     except Exception,e:
         exc_tuple = sys.exc_info()
         LOG.error('Something went wrong getting latest snapshot, error: '+str(e))
@@ -457,6 +489,24 @@ def _get_fst_id(fileset_name=None,os_type=None):
         return None
     else:
         return my_fst['id']
+
+def _get_fileset_list(host_id=None):
+    '''
+    Returns a tuple of Fileset Name and SLA Domain for all filesets on a given host.
+    '''
+    fileset_list = []
+    token = _get_token()
+    uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/fileset?primary_cluster_id=local&is_relic=false&host_id='+host_id
+    headers = {'Accept':'application/json', 'Authorization':token}
+    fileset_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+    for fileset in fileset_query.json()['data']:
+        this_fileset = {
+            "name":fileset['name'],
+            "id":fileset['id'],
+            "slaDomainName":fileset['configuredSlaDomainName']
+        }
+        fileset_list.append(this_fileset)
+    return fileset_list
 
 def _get_fileset_id(host_id=None,fst_id=None):
     '''
