@@ -128,3 +128,60 @@ root@salt-master:/srv/salt/_modules# salt '*' rubrik.add_fileset_to_host hostnam
 salt-minion-01.rangers.lab:
     Something went wrong creating the fileset, error: Host not found
 ```
+
+### get_host_registration
+
+Returns a boolean value based on whether a host is registered with the Rubrik cluster.
+
+#### Example Usage - get_host_registration
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-ansible
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-linux
+salt-minion-01.rangers.lab:
+    True
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-linux os_type=Windows
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_host_registration hostname=th-chef-win os_type=Windows
+salt-minion-01.rangers.lab:
+    True
+```
+
+### check_fileset_configuration
+
+Checks if a fileset for a Windows/Linux/Unix host exists and is correctly protected.
+
+#### Example Usage - check_fileset_configuration
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.check_fileset_configuration hostname=172.21.11.120 fileset_name=th-allthethings sla_domain=Gold
+salt-minion-01.rangers.lab:
+    True
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.check_fileset_configuration hostname=172.21.11.120 fileset_name=th-allthethings sla_domain=Bronze
+salt-minion-01.rangers.lab:
+    False
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.check_fileset_configuration hostname=172.21.11.120 fileset_name=th-allthethings sla_domain=Blue
+salt-minion-01.rangers.lab:
+    Something went wrong getting fileset details, error: No SLA Domain found with name: Blue
+```
+
+### get_latest_snapshot
+
+Returns the latest snapshot date/time for a given object
+
+#### Example Usage - get_latest_snapshot
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_latest_snapshot hostname=172.21.11.120 fileset_name=th-allthethings object_type=fileset
+salt-minion-01.rangers.lab:
+    2020-01-02 16:11:20
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_latest_snapshot
+salt-minion-01.rangers.lab:
+    2020-01-02 08:00:54.649000
+```
