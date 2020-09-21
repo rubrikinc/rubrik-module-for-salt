@@ -185,3 +185,15 @@ root@salt-master:/srv/salt/_modules# salt '*' rubrik.get_latest_snapshot
 salt-minion-01.rangers.lab:
     2020-01-02 08:00:54.649000
 ```
+
+### snapshotConsistency
+
+Sets the snapshot consistency mandate for a VMware VM
+
+#### Example Usage - snapshotConsistency
+
+```none
+root@salt-master:/srv/salt/_modules# salt '*' rubrik.rubrik.snapshotConsistency hostname=salt-minion-01 mandate=CRASH_CONSISTENT
+salt-minion-01.rangers.lab:
+    Mandate already set to CRASH_CONSISTENT
+```
