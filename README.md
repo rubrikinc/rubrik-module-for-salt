@@ -13,6 +13,7 @@ Features the following resources:
 * Check host registration status
 * Check fileset protection state
 * Get latest snapshot date
+* Set VMware VM snapshot consistency mandate
 
 # :blue_book: Documentation
 
