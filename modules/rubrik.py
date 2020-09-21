@@ -73,7 +73,7 @@ def get_vmware_vm_sla(hostname=None):
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         token = _get_token()
         '''Check to see if VM exists'''
         my_vm = False
@@ -98,7 +98,7 @@ def set_vmware_vm_sla(hostname=None,sla_domain=None):
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         if not sla_domain:
             LOG.error("No SLA Domain name passed")
             raise ValueError("No SLA Domain name passed")
@@ -148,7 +148,7 @@ def od_backup_vmware_vm(hostname=None,sla_domain=None,object_type='vmware_vm',wa
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         if not sla_domain:
             LOG.error("No SLA Domain name passed")
             raise ValueError("No SLA Domain name passed")
@@ -206,7 +206,7 @@ def register_host(hostname=None):
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         token = _get_token()
         uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/host'
         headers = {'Content-Type':'application/json','Accept':'application/json','Authorization':token}
@@ -230,7 +230,7 @@ def get_host_registration(hostname=None,os_type='Linux'):
     try:
         host_registered = False
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         token = _get_token()
         if os_type == 'Linux':
             os_type = 'UnixLike'
@@ -259,7 +259,7 @@ def add_fileset_to_host(hostname=None,fileset_name=None,sla_domain=None,os_type=
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         if not sla_domain:
             LOG.error("No SLA Domain name passed")
             raise ValueError("No SLA Domain name passed")
@@ -341,7 +341,7 @@ def check_fileset_configuration(hostname=None,fileset_name=None,sla_domain=None,
     try:
         fileset_configured = False
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         if not sla_domain:
             LOG.error("No SLA Domain name passed")
             raise ValueError("No SLA Domain name passed")
@@ -393,7 +393,7 @@ def check_fileset_configuration(hostname=None,fileset_name=None,sla_domain=None,
 def get_fileset_list(hostname=None,os_type='Linux'):
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         token = _get_token()
         os_type = _normalise_os_type(os_type)
         '''
@@ -419,7 +419,7 @@ def get_latest_snapshot(hostname=None,object_type='vmware_vm',**kwargs):
     '''
     try:
         if not hostname:
-            hostname = __grains__['host']
+            hostname = __grains__['id']
         token = _get_token()
         '''
         Latest snapshot for vmware_vm
@@ -474,6 +474,46 @@ def get_latest_snapshot(hostname=None,object_type='vmware_vm',**kwargs):
         exc_tuple = sys.exc_info()
         LOG.error('Something went wrong getting latest snapshot, error: '+str(e))
         return ('Something went wrong getting latest snapshot, error: '+str(e))
+
+def snapshotConsistency(hostname=None,mandate="CRASH_CONSISTENT"):
+    '''
+    Updates the snapshotConsistencyMandate for the given vSphere VM
+    '''
+    try:
+        if not hostname:
+            hostname = __grains__['id']
+        if not mandate:
+            LOG.error("No mandate name passed")
+            raise ValueError("No mandate name passed")
+        token = _get_token()
+        '''Check to see if VM exists'''
+        my_vm = False
+        uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/vmware/vm?primary_cluster_id=local&is_relic=false&name='+hostname
+        headers = {'Accept':'application/json', 'Authorization':token}
+        vm_query = requests.get(uri, headers=headers, verify=False, timeout=15)
+        for vm in vm_query.json()['data']:
+            if vm['name'] == hostname:
+                my_vm = vm
+        if not my_vm:
+            LOG.error("VMware VM not found.")
+            raise ValueError("VMware VM not found")
+        '''Compare current Mandate domain to desired one, and update if necessary'''
+        if my_vm['snapshotConsistencyMandate'] == mandate:
+            LOG.info('Mandate already set to '+mandate)
+            return ('Mandate already set to '+mandate)
+        else:
+            uri = 'https://'+__salt__['pillar.get']('rubrik.node','')+'/api/v1/vmware/vm/'+my_vm['id']
+            headers = {'Content-Type':'application/json','Accept':'application/json','Authorization':token}
+            payload = '{"snapshotConsistencyMandate":"' + mandate + '"}'
+            update_mandate = requests.patch(uri, headers=headers, verify=False, data=payload)
+            if update_mandate.status_code != 200:
+                raise ValueError("Something went wrong setting the Mandate")
+            LOG.info('Mandate updated to '+mandate)
+            return ('Mandate updated to '+mandate)
+    except Exception as e:
+        exc_tuple = sys.exc_info()
+        LOG.error('Something went wrong setting the Mandate for this VM, error: '+str(e))
+        return ('Something went wrong setting the Mandate for this VM, error: '+str(e))
 
 '''
 Helper functions
